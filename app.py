@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-from database import get_balance, add_expense , init_db , get_all_expenses ,set_balance
-
+import plotly.express as px
+from database import get_balance, add_expense , init_db , get_all_expenses ,set_balance,get_category_expenses
+from mappings import auto_classify
 # CSS Injection
 st.markdown("""
     <style>
@@ -10,6 +11,7 @@ st.markdown("""
         text-transform: capitalize;
     }
     </style>
+            
 """, unsafe_allow_html=True)
 
 
@@ -20,7 +22,7 @@ init_db()
 st.title("💰 Aura Finance Tracker")
 
 # Sidebar mein options
-menu = st.sidebar.selectbox("Navigation", ["Dashboard", "Add Expense", "View History"])
+menu = st.sidebar.selectbox("Navigation", ["Dashboard", "Add Expense", "View History", "Analytics"])
 
 if menu == "Dashboard":
     st.subheader("Current Balance")
@@ -56,3 +58,20 @@ elif menu == "View History":
         st.table(df)
     else:
         st.write("No expenses found yet!")
+elif menu == "Analytics":
+    st.subheader("Expense Analytics")
+    category_data = get_category_expenses() # Yeh wahi function hai jo sum return karta hai
+    
+    if category_data:
+        df_chart = pd.DataFrame(category_data, columns=["Category", "Total"])
+        
+        # Pie Chart
+        fig = px.pie(df_chart, values='Total', names='Category', title="Spending Distribution")
+        st.plotly_chart(fig)
+        
+        # Bar Chart (Comparison ke liye)
+        st.write("---")
+        fig_bar = px.bar(df_chart, x='Category', y='Total', title="Amount Spent per Category")
+        st.plotly_chart(fig_bar)
+    else:
+        st.info("Start adding expenses to see the magic!")

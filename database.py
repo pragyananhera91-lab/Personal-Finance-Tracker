@@ -1,17 +1,14 @@
 import sqlite3
+from mappings import auto_classify
+from datetime import datetime
 
 def init_db():
     conn = sqlite3.connect('finance.db')
     cursor = conn.cursor()
     # Table banayi jahan data save hoga
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS expenses (
-            id INTEGER PRIMARY KEY,
-            amount REAL,
-            category TEXT,
-            date TEXT
-        )
-    ''')
+    # database.py mein table creation query update karo
+    cursor.execute('''CREATE TABLE IF NOT EXISTS expenses 
+                  (id INTEGER PRIMARY KEY, amount REAL, category TEXT, group_category TEXT, date DATE)''')
     conn.commit()
     conn.close()
     print("Database initialized successfully!")
@@ -19,12 +16,13 @@ def init_db():
 if __name__ == "__main__":
     init_db()
 def add_expense(amount, category):
-    formatted_category = category.strip().capitalize() 
+    group_cat = auto_classify(category)
+    date_today = datetime.now().strftime("%Y-%m-%d")
     
     conn = sqlite3.connect('finance.db')
     cursor = conn.cursor()
-    
-    cursor.execute("INSERT INTO expenses (amount, category) VALUES (?, ?)", (amount, formatted_category))
+    cursor.execute("INSERT INTO expenses (amount, category, group_category, date) VALUES (?, ?, ?, ?)", 
+                   (amount, category, group_cat, date_today))
     conn.commit()
     conn.close()
     print("Expense added successfully!")
@@ -99,3 +97,11 @@ def set_balance(new_balance):
     cursor.execute("UPDATE settings SET balance = ? WHERE id = 1", (new_balance,))
     conn.commit()
     conn.close()
+def get_category_expenses():
+    conn = sqlite3.connect('finance.db')
+    cursor = conn.cursor()
+    # Har category ka sum nikalo
+    cursor.execute("SELECT category, SUM(amount) FROM expenses GROUP BY category")
+    data = cursor.fetchall()
+    conn.close()
+    return data
