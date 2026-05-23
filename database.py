@@ -27,3 +27,12 @@ def view_expenses():
     for row in rows:
         print(row)
     conn.close()
+
+def delete_expense(expense_id):
+    conn = sqlite3.connect('finance.db')
+    cursor = conn.cursor()
+    # ID ke basis par delete karega
+    cursor.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
+    conn.commit()
+    conn.close()
+    print(f"Expense with ID {expense_id} deleted successfully!")
